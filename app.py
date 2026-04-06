@@ -260,23 +260,20 @@ def year(date_str):
     return date_str[:4] if date_str and len(date_str) >= 4 else "N/A"
 
 
-def render_movie_card(movie, score=None):
-    badge = f'<div class="match-badge">Match</div>' if score else ""
-    rating_stars = "★" * round(movie["vote_average"] / 2)
-    html = f"""
-    <div class="movie-card">
-        <img src="{poster_url(movie['poster_path'])}" alt="{movie['title']}" loading="lazy"/>
-        <div class="card-body">
-            {badge}
-            <div class="card-title">{movie['title']}</div>
-            <div class="card-meta">
-                <span class="card-rating">{rating_stars}</span>
-                {movie['vote_average']:.1f} &nbsp;·&nbsp; {year(movie['release_date'])}
-            </div>
-        </div>
-    </div>
-    """
-    return html
+def render_movie_card(col, movie, score=None):
+    with col:
+        img = poster_url(movie["poster_path"])
+        st.image(img, use_container_width=True)
+        rating_stars = "★" * round(movie["vote_average"] / 2)
+        title = movie["title"]
+        if len(title) > 22:
+            title = title[:20] + "…"
+        st.markdown(
+            f"**{title}**  \n"
+            f"<span style='color:#f5c518;font-size:0.75rem;'>{rating_stars}</span> "
+            f"<span style='color:#888;font-size:0.75rem;'>{movie['vote_average']:.1f} · {year(movie['release_date'])}</span>",
+            unsafe_allow_html=True,
+        )
 
 
 # ── App layout ────────────────────────────────────────────────────────────────
@@ -335,8 +332,7 @@ if query and (search_btn or query):
         # Render recommendation grid
         cols = st.columns(5)
         for i, (_, movie) in enumerate(recs.iterrows()):
-            with cols[i % 5]:
-                st.markdown(render_movie_card(movie, scores[i]), unsafe_allow_html=True)
+            render_movie_card(cols[i % 5], movie, scores[i])
 
 else:
     # Default: show trending
@@ -344,8 +340,7 @@ else:
     trending = df.sort_values("popularity", ascending=False).head(10)
     cols = st.columns(5)
     for i, (_, movie) in enumerate(trending.iterrows()):
-        with cols[i % 5]:
-            st.markdown(render_movie_card(movie), unsafe_allow_html=True)
+        render_movie_card(cols[i % 5], movie)
 
 st.markdown("""
 <footer>
