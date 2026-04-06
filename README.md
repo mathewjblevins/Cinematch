@@ -1,6 +1,6 @@
 CineMatch
 
-A content-based movie recommendation engine built with Python, scikit-learn, and Streamlit.
+A content-based movie recommendation engine built with Python and Streamlit.
 
 How It Works
 
