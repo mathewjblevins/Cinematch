@@ -1,8 +1,8 @@
-# 🎬 CineMatch
+CineMatch
 
 A content-based movie recommendation engine built with Python, scikit-learn, and Streamlit.
 
-## How It Works
+How It Works
 
 CineMatch uses **content-based filtering** to recommend movies similar to one you already like:
 
@@ -13,9 +13,9 @@ CineMatch uses **content-based filtering** to recommend movies similar to one yo
 
 ## Why Content-Based Filtering?
 
-- ✅ No cold start problem — works without any user history
-- ✅ Explainable — recommendations are based on movie attributes, not black-box user patterns
-- ✅ Live data — always up to date via TMDB API
+- No cold start problem, so it works without any user history
+- Explainable so the recommendations are based on movie attributes, not black-box user patterns
+- Live data always up to date via TMDB API
 
 ## Tech Stack
 
@@ -44,14 +44,6 @@ Run the app:
 ```bash
 streamlit run app.py
 ```
-
-## Team
-
-| Member | Role |
-|--------|------|
-| Mathew Blevins | Project lead, ML model, Streamlit app, deployment |
-| Tyler Johnson | Team member |
-| Joseph Scheele | Team member |
 
 ## Course
 
