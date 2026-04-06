@@ -6,10 +6,10 @@ How It Works
 
 CineMatch uses **content-based filtering** to recommend movies similar to one you already like:
 
-1. **Data** — Fetches movie data (overviews, genres, ratings, posters) live from the TMDB API
-2. **Vectorization** — Applies TF-IDF vectorization to each movie's overview and genre tags
-3. **Similarity** — Computes cosine similarity between all movie vectors
-4. **Recommendations** — Returns the top 10 most similar movies ranked by similarity score
+1. **Data** Fetches movie data (overviews, genres, ratings, posters) live from the TMDB API
+2. **Vectorization** Applies TF-IDF vectorization to each movie's overview and genre tags
+3. **Similarity** Computes cosine similarity between all movie vectors
+4. **Recommendations** Returns the top 10 most similar movies ranked by similarity score
 
 ## Why Content-Based Filtering?
 
