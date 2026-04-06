@@ -178,7 +178,7 @@ def fetch_movies(pages=10):
     genre_map = get_genre_map()
 
     for page in range(1, pages + 1):
-        for endpoint in ["movie/popular", "movie/top_rated"]:
+        for endpoint in ["movie/popular", "movie/top_rated", "movie/now_playing", "movie/upcoming"]:
             r = requests.get(
                 f"{BASE_URL}/{endpoint}",
                 params={"api_key": API_KEY, "language": "en-US", "page": page},
@@ -231,12 +231,53 @@ def build_similarity_matrix(df):
     return cosine_similarity(matrix)
 
 
+def search_and_add_movie(title, df):
+    """Search TMDB for a specific title and add it to the dataframe if found."""
+    genre_map = get_genre_map()
+    r = requests.get(
+        f"{BASE_URL}/search/movie",
+        params={"api_key": API_KEY, "query": title, "language": "en-US"},
+        timeout=10,
+    )
+    if r.status_code != 200:
+        return df
+    results = r.json().get("results", [])
+    if not results:
+        return df
+    new_rows = []
+    for m in results[:5]:
+        mid = m["id"]
+        if mid not in df["id"].values:
+            genres = " ".join(genre_map.get(g, "") for g in m.get("genre_ids", []))
+            new_rows.append({
+                "id": mid,
+                "title": m.get("title", ""),
+                "overview": m.get("overview", ""),
+                "genres": genres,
+                "poster_path": m.get("poster_path", ""),
+                "vote_average": m.get("vote_average", 0),
+                "release_date": m.get("release_date", ""),
+                "popularity": m.get("popularity", 0),
+            })
+    if new_rows:
+        new_df = pd.DataFrame(new_rows)
+        df = pd.concat([df, new_df], ignore_index=True)
+    return df
+
+
 def get_recommendations(title, df, sim_matrix, n=10):
-    """Return top-n similar movies for a given title."""
+    """Return top-n similar movies for a given title, with TMDB search fallback."""
     title_lower = title.lower().strip()
     matches = df[df["title"].str.lower().str.contains(title_lower, na=False)]
+
+    # If not in corpus, search TMDB directly and rebuild matrix
     if matches.empty:
-        return None, None
+        df = search_and_add_movie(title, df)
+        df = df.reset_index(drop=True)
+        matches = df[df["title"].str.lower().str.contains(title_lower, na=False)]
+        if matches.empty:
+            return None, None, df
+        sim_matrix = build_similarity_matrix(df)
 
     # Pick the most popular match
     idx = matches.sort_values("popularity", ascending=False).index[0]
@@ -244,12 +285,11 @@ def get_recommendations(title, df, sim_matrix, n=10):
 
     scores = list(enumerate(sim_matrix[pos]))
     scores = sorted(scores, key=lambda x: x[1], reverse=True)
-    # Skip the movie itself
     scores = [s for s in scores if s[0] != pos][:n]
 
     result_indices = [s[0] for s in scores]
     result_scores = [s[1] for s in scores]
-    return df.iloc[result_indices], result_scores
+    return df.iloc[result_indices], result_scores, df
 
 
 def poster_url(path):
@@ -301,7 +341,7 @@ st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # Results
 if query and (search_btn or query):
-    recs, scores = get_recommendations(query, df, sim_matrix, n=10)
+    recs, scores, df = get_recommendations(query, df, sim_matrix, n=10)
 
     if recs is None:
         st.warning(f'No movie found matching "{query}". Try a different title.')
